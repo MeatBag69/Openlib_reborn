@@ -8,47 +8,42 @@ An Open source app to download and read books from shadow library ([Anna’s Arc
 
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-4361ee.svg?style=for-the-badge)](https://flutter.dev/)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-e63946.svg?style=for-the-badge)](https://opensource.org/licenses/)
-[![Latest release](https://img.shields.io/github/release/dstark5/Openlib.svg?style=for-the-badge)](https://github.com/dstark5/Openlib/releases)
+[![Latest release](https://img.shields.io/github/release/MeatBag69/Openlib_reborn.svg?style=for-the-badge)](https://github.com/MeatBag69/Openlib_reborn/releases)
 
 [<img src="github_releases.png"
      alt="Get it on GitHub"
-     height="60">](https://github.com/dstark5/Openlib/releases)
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
-     alt="Get it on IzzyOnDroid"
-     height="60">](https://android.izzysoft.de/repo/apk/com.app.openlib)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="60">](https://f-droid.org/en/packages/com.app.openlib/)
-[<img src="https://www.openapk.net/images/openapk-badge.png" 
-     alt="Get it on Openapk" 
-     height="60">](https://www.openapk.net/openlib/com.app.openlib/)
+     height="60">](https://github.com/MeatBag69/Openlib_reborn/releases)
 </div>
 
 ## Note 📝
 
-**WARNING:** This App Is In Beta Stage, So You May Encounter Bugs. If You Do, Open An Issue In Github Repository.
+**WARNING:** This App Is In Beta Stage, So You May Encounter Bugs. If You Do, Open An Issue In the Github Repository.
 
 **Publishing Openlib, Or Any Fork Of It In The Google Play Store Violates Their Terms And Conditions**
 
 ## Screenshots 🖼️
 
-[<img src="screenshots/Screenshot_1.png" width=160>](screenshots/Screenshot_1.png)
-[<img src="screenshots/Screenshot_2.png" width=160>](screenshots/Screenshot_2.png)
-[<img src="screenshots/Screenshot_3.png" width=160>](screenshots/Screenshot_3.png)
-[<img src="screenshots/Screenshot_4.png" width=160>](screenshots/Screenshot_4.png)
-[<img src="screenshots/Screenshot_5.png" width=160>](screenshots/Screenshot_5.png)
-[<img src="screenshots/Screenshot_6.png" width=160>](screenshots/Screenshot_6.png)
-[<img src="screenshots/Screenshot_7.png" width=160>](screenshots/Screenshot_7.png)
-[<img src="screenshots/Screenshot_8.png" width=160>](screenshots/Screenshot_8.png)
+<!-- TODO: Update these screenshots with the latest version of the app -->
+<div align="center">
+    <img src="screenshots/Screenshot_1.png" width=160>
+    <img src="screenshots/Screenshot_2.png" width=160>
+    <img src="screenshots/Screenshot_3.png" width=160>
+    <img src="screenshots/Screenshot_4.png" width=160>
+    <img src="screenshots/Screenshot_5.png" width=160>
+    <img src="screenshots/Screenshot_6.png" width=160>
+    <img src="screenshots/Screenshot_7.png" width=160>
+    <img src="screenshots/Screenshot_8.png" width=160>
+</div>
 
 ## Description 📖
 
-Openlib Is An Open Source App To Download And Read Books From Shadow Library ([Anna’s Archive](https://annas-archive.org/)). The App Has Built In Reader to Read Books
+Openlib Is An Open Source App To Download And Read Books From Shadow Library ([Anna’s Archive](https://annas-archive.org/)). The App Has Built-In Reader to Read Books.
 
-As [Anna’s Archive](https://annas-archive.org/) Doesn't Have An API. The App Works By Sending Request To Anna’s Archive And Parses The Response To objects. The App Extracts The Mirrors From Response And Downloads The Book
+As [Anna’s Archive](https://annas-archive.org/) Doesn't Have An API, The App Works By Sending Requests To Anna’s Archive And Parsing The DOM Response. To ensure reliability, the app now supports **Multiple Mirrors** and will automatically switch to a working mirror if the primary one is blocked or down.
 
 ## Features ✨
 
+- **Multi-Mirror Support**: Automatically switches between `.li`, `.se`, `.org`, and others if one fails.
 - Trending Books
 - Download And Read Books With In-Built Viewer
 - Supports Epub And Pdf Formats
@@ -70,7 +65,7 @@ As [Anna’s Archive](https://annas-archive.org/) Doesn't Have An API. The App W
 - Git Clone The Repo
 
      ```sh
-     git clone https://github.com/dstark5/Openlib.git
+     git clone https://github.com/MeatBag69/Openlib_reborn.git
      ```
 
 - Run the app with Android Studio or VS Code. Or the command line:
@@ -83,14 +78,14 @@ As [Anna’s Archive](https://annas-archive.org/) Doesn't Have An API. The App W
 - To Build App Run:
 
      ```sh
-     flutter build
+     flutter build apk
      ```
 
-- The Build Will Be In './build/app/outputs/flutter-apk/app-release.apk'
+- The Build Will Be In `./build/app/outputs/flutter-apk/app-release.apk`
 
 ### Android
 
-Make sure that `android/local.properties` has `flutter.minSdkVersion=21` or above
+Make sure that `android/local.properties` has `flutter.minSdkVersion=21` or above.
 For setup guide see [SETUP.md](./SETUP.md)
 
 ## Contributor required 🚧
@@ -105,11 +100,11 @@ If you'd like to get involved See [CONTRIBUTING.md](./CONTRIBUTING.md) for the g
 
 ## Issues 🚩
 
-Please report bugs via the [issue tracker](https://github.com/dstark5/Openlib/issues).
+Please report bugs via the [issue tracker](https://github.com/MeatBag69/Openlib_reborn/issues).
 
 ## Donate 🎁
 
-If you like Openlib, you're welcome to send a donation.
+If you like Openlib, you're welcome to send a donation to the original developers or support Anna's Archive directly.
 
 [Donate To Anna’s Archive.](https://annas-archive.org/donate?tier=1)
 

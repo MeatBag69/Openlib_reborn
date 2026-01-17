@@ -53,7 +53,14 @@ class BookInfoData extends BookData {
 // ====================================================================
 
 class AnnasArchieve {
-  static const String baseUrl = "https://annas-archive.org";
+  // List of mirrors to try in order
+  static const List<String> mirrors = [
+    "https://annas-archive.li",
+    "https://annas-archive.se",
+    "https://annas-archive.org",
+    "https://annas-archive.pm", 
+    "https://annas-archive.in" 
+  ];
 
   final Dio dio = Dio();
 
@@ -63,9 +70,14 @@ class AnnasArchieve {
   };
 
   String getMd5(String url) {
-    final uri = Uri.parse(url);
-    final pathSegments = uri.pathSegments;
-    return pathSegments.isNotEmpty ? pathSegments.last : '';
+    // Handling full URLs from different mirrors
+    try {
+        final uri = Uri.parse(url);
+        final pathSegments = uri.pathSegments;
+        return pathSegments.isNotEmpty ? pathSegments.last : '';
+    } catch (e) {
+        return '';
+    }
   }
 
   String getFormat(String info) {
@@ -80,12 +92,11 @@ class AnnasArchieve {
     return "epub";
   }
 
-  // Helper function to safely parse potential NaN/Infinity to prevent crash
-  // This is a generic safeguard for the third type of error you received.
+  // Helper function to safely parse potential NaN/Infinity
   dynamic _safeParse(dynamic value) {
     if (value is String) {
       if (value.toLowerCase() == 'nan' || value.toLowerCase() == 'infinity') {
-        return null; // Return null or 0 instead of throwing an error
+        return null;
       }
       return value;
     }
@@ -93,9 +104,9 @@ class AnnasArchieve {
   }
   
   // --------------------------------------------------------------------
-  // _parser FUNCTION (Search Results - Fixed nth-of-type issue)
+  // _parser FUNCTION
   // --------------------------------------------------------------------
-  List<BookData> _parser(resData, String fileType) {
+  List<BookData> _parser(resData, String fileType, String currentBaseUrl) {
     var document = parse(resData.toString());
 
     var bookContainers =
@@ -113,11 +124,10 @@ class AnnasArchieve {
       }
 
       final String title = mainLinkElement.text.trim();
-      final String link = baseUrl + mainLinkElement.attributes['href']!;
+      final String link = currentBaseUrl + mainLinkElement.attributes['href']!;
       final String md5 = getMd5(mainLinkElement.attributes['href']!);
       final String? thumbnail = thumbnailElement?.attributes['src'];
 
-      // Fix: Use sequential traversal instead of :nth-of-type
       dom.Element? authorLinkElement = mainLinkElement.nextElementSibling;
       dom.Element? publisherLinkElement = authorLinkElement?.nextElementSibling;
       
@@ -136,7 +146,6 @@ class AnnasArchieve {
       final String? publisher = publisherLinkElement?.text.trim();
       
       final infoElement = container.querySelector('div.text-gray-800');
-      // No need for _safeParse here if we only treat info as a string
       final String? info = infoElement?.text.trim(); 
       
       final bool hasMatchingFileType = fileType.isEmpty
@@ -161,9 +170,9 @@ class AnnasArchieve {
   // --------------------------------------------------------------------
 
   // --------------------------------------------------------------------
-  // _bookInfoParser FUNCTION (Detail Page - Fixed 'unable to get data' error)
+  // _bookInfoParser FUNCTION
   // --------------------------------------------------------------------
-  Future<BookInfoData?> _bookInfoParser(resData, url) async {
+  Future<BookInfoData?> _bookInfoParser(resData, url, String currentBaseUrl) async {
     var document = parse(resData.toString());
     final main = document.querySelector('div.main-inner'); 
     if (main == null) return null;
@@ -172,32 +181,22 @@ class AnnasArchieve {
     String? mirror;
     final slowDownloadLinks = main.querySelectorAll('ul.list-inside a[href*="/slow_download/"]');
     if (slowDownloadLinks.isNotEmpty && slowDownloadLinks.first.attributes['href'] != null) {
-        mirror = baseUrl + slowDownloadLinks.first.attributes['href']!;
+        mirror = currentBaseUrl + slowDownloadLinks.first.attributes['href']!;
     }
     // --------------------------------
 
-
     // --- Core Info Extraction ---
-    
-    // Title
     final titleElement = main.querySelector('div.font-semibold.text-2xl'); 
-    
-    // Author
     final authorLinkElement = main.querySelector('a[href^="/search?q="].text-base');
     
-    // Publisher
     dom.Element? publisherLinkElement = authorLinkElement?.nextElementSibling;
     if (publisherLinkElement?.localName != 'a' || publisherLinkElement?.attributes['href']?.startsWith('/search?q=') != true) {
         publisherLinkElement = null;
     }
 
-    // Thumbnail
     final thumbnailElement = main.querySelector('div[id^="list_cover_"] img');
-    
-    // Info/Metadata
     final infoElement = main.querySelector('div.text-gray-800');
     
-    // Description
     dom.Element? descriptionElement;
     final descriptionLabel = main.querySelector('div.js-md5-top-box-description div.text-xs.text-gray-500.uppercase');
     
@@ -215,8 +214,6 @@ class AnnasArchieve {
     final String? thumbnail = thumbnailElement?.attributes['src'];
     
     final String publisher = publisherLinkElement?.text.trim() ?? "unknown";
-    // NOTE: If you extract any numeric data from the 'info' string later in your app (e.g., file size or page count)
-    // and attempt to convert it to an integer or double, that's where you should use _safeParse.
     final String info = infoElement?.text.trim() ?? ''; 
 
     return BookInfoData(
@@ -235,7 +232,8 @@ class AnnasArchieve {
   // --------------------------------------------------------------------
 
   String urlEncoder(
-      {required String searchQuery,
+      {required String baseUrl,
+      required String searchQuery,
       required String content,
       required String sort,
       required String fileType,
@@ -247,48 +245,80 @@ class AnnasArchieve {
     return '$baseUrl/search?index=&q=$searchQuery&content=$content&ext=$fileType&sort=$sort';
   }
 
+  /// Generic retry logic for fetching data from mirrors
+  /// [operation] is a function that takes a base URL and returns a Future of type T.
+  Future<T> _fetchWithFailover<T>(Future<T> Function(String baseUrl) operation) async {
+    dynamic lastError;
+
+    for (String mirror in mirrors) {
+      try {
+        // print("Trying mirror: $mirror");
+        return await operation(mirror);
+      } catch (e) {
+        lastError = e;
+        // Continue to next mirror
+      }
+    }
+    
+    // If all mirrors fail, rethrow the last error
+    if (lastError != null) {
+        if (lastError is DioException && lastError.type == DioExceptionType.unknown) {
+             throw "socketException";
+        }
+        throw lastError;
+    }
+    throw "All mirrors failed";
+  }
+
   Future<List<BookData>> searchBooks(
       {required String searchQuery,
       String content = "",
       String sort = "",
       String fileType = "",
       bool enableFilters = true}) async {
-    try {
-      final String encodedURL = urlEncoder(
-          searchQuery: searchQuery,
-          content: content,
-          sort: sort,
-          fileType: fileType,
-          enableFilters: enableFilters);
+    
+    return _fetchWithFailover<List<BookData>>((baseUrl) async {
+        final String encodedURL = urlEncoder(
+            baseUrl: baseUrl,
+            searchQuery: searchQuery,
+            content: content,
+            sort: sort,
+            fileType: fileType,
+            enableFilters: enableFilters);
 
-      final response = await dio.get(encodedURL,
-          options: Options(headers: defaultDioHeaders));
-      return _parser(response.data, fileType);
-    } on DioException catch (e) {
-        if (e.type == DioExceptionType.unknown) {
-            throw "socketException";
-        }
-        rethrow;
-    }
+        final response = await dio.get(encodedURL,
+            options: Options(headers: defaultDioHeaders));
+        return _parser(response.data, fileType, baseUrl);
+    });
   }
 
   Future<BookInfoData> bookInfo({required String url}) async {
+    // Note: 'url' passed here might be a full URL from a search result. 
+    // Ideally, we should respect the domain in 'url' if it's already absolute.
+    // However, if the search result came from a mirror that is now down, we might want to try other mirrors.
+    // But usually 'url' here is the specific page for the book. 
+    
+    // Strategy: Extract the path from the URL and try it on all mirrors.
+    
+    String path;
     try {
-      final response =
-          await dio.get(url, options: Options(headers: defaultDioHeaders));
-      BookInfoData? data = await _bookInfoParser(response.data, url);
-      if (data != null) {
-        // Here's where you might use _safeParse if the API returned a numeric field
-        // E.g., int pages = _safeParse(data.pages).toInt(); 
-        return data;
-      } else {
-        throw 'unable to get data';
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.unknown) {
-        throw "socketException";
-      }
-      rethrow;
+        final uri = Uri.parse(url);
+        path = uri.path;
+    } catch(e) {
+        // Fallback or rethrow
+        throw "Invalid URL";
     }
+
+    return _fetchWithFailover<BookInfoData>((baseUrl) async {
+         final fullUrl = "$baseUrl$path";
+         final response = await dio.get(fullUrl, options: Options(headers: defaultDioHeaders));
+         BookInfoData? data = await _bookInfoParser(response.data, fullUrl, baseUrl);
+         if (data != null) {
+            return data;
+         } else {
+             throw 'unable to get data';
+         }
+    });
+
   }
 }

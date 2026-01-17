@@ -13,7 +13,7 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const version = "1.0.12";
+    const version = "1.1.0";
 
     return Scaffold(
       appBar: AppBar(
@@ -65,7 +65,7 @@ class AboutPage extends StatelessWidget {
               ),
               _UrlText(
                   text: 'Report An Issue',
-                  url: 'https://github.com/DHR-Store/Openlib/issues'),
+                  url: 'https://github.com/MeatBag69/Openlib_reborn/issues'),
               _UrlText(
                   text: 'Share Openlib',
                   url: 'https://dhr-store.vercel.app/app6.html'),

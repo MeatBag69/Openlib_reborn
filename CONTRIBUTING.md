@@ -4,7 +4,7 @@
 
 - This project is powered by Flutter. Make sure you have the latest version of Flutter.
 
-- If you want to fix bug or implement a new feature, that already mention in the [issues](https://github.com/dstark5/Openlib/issues), please, assign this issue to you and/or comment about it.
+- If you want to fix bug or implement a new feature, that already mention in the [issues](https://github.com/MeatBag69/Openlib_reborn/issues), please, assign this issue to you and/or comment about it.
 
 - Whether you have to implement new feature, please, open an issue or discussion regarding it to ensure it will be accepted.
 
