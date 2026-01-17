@@ -12,7 +12,8 @@ import 'package:openlib/services/share_book.dart';
 // import 'package:flutter_svg/svg.dart';
 
 // Project imports:
-import 'package:openlib/services/annas_archieve.dart' show BookInfoData;
+import 'package:openlib/services/annas_archieve.dart'
+    show BookInfoData, AnnasArchieve;
 import 'package:openlib/services/database.dart';
 import 'package:openlib/services/download_file.dart';
 import 'package:openlib/ui/components/book_info_widget.dart';
@@ -225,14 +226,53 @@ class _ActionButtonWidgetState extends ConsumerState<ActionButtonWidget> {
                   onPressed: () async {
                     if (widget.data.mirror != null &&
                         widget.data.mirror != '') {
-                      final result = await Navigator.push(context,
-                          MaterialPageRoute(builder: (BuildContext context) {
-                        return Webview(url: widget.data.mirror ?? '');
-                      }));
+                      // Try direct fetch first
+                      try {
+                        // Show loading dialog with countdown
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext dialogContext) {
+                            return _WaitingDialog(
+                              onCancel: () {
+                                Navigator.of(dialogContext).pop();
+                              },
+                            );
+                          },
+                        );
 
-                      if (result != null) {
-                        await downloadFileWidget(
-                            ref, context, widget.data, result);
+                        // Fetch download links directly
+                        final annasArchive = AnnasArchieve();
+                        final result = await annasArchive
+                            .fetchDownloadLinks(widget.data.mirror ?? '');
+
+                        // Close the waiting dialog
+                        // ignore: use_build_context_synchronously
+                        Navigator.of(context).pop();
+
+                        // Start download
+                        if (result.isNotEmpty) {
+                          await downloadFileWidget(
+                              ref, context, widget.data, result);
+                        }
+                      } catch (e) {
+                        // Close waiting dialog if still open
+                        // ignore: use_build_context_synchronously
+                        if (Navigator.canPop(context)) {
+                          Navigator.of(context).pop();
+                        }
+
+                        // Fallback to WebView if direct fetch fails
+                        // ignore: use_build_context_synchronously
+                        final result = await Navigator.push(context,
+                            MaterialPageRoute(builder: (BuildContext context) {
+                          return Webview(url: widget.data.mirror ?? '');
+                        }));
+
+                        if (result != null) {
+                          await downloadFileWidget(
+                              ref, context, widget.data, result);
+                        }
                       }
                     } else {
                       showSnackBar(
@@ -665,4 +705,88 @@ Future<void> _showWarningFileDialog(BuildContext context) async {
       );
     },
   );
+}
+
+class _WaitingDialog extends StatefulWidget {
+  final VoidCallback onCancel;
+
+  const _WaitingDialog({required this.onCancel});
+
+  @override
+  State<_WaitingDialog> createState() => _WaitingDialogState();
+}
+
+class _WaitingDialogState extends State<_WaitingDialog> {
+  int countdown = 8;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted && countdown > 0) {
+        setState(() {
+          countdown--;
+        });
+        _startCountdown();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.secondary,
+                strokeWidth: 3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Preparing download...',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '$countdown seconds remaining',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.tertiary.withAlpha(170),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextButton(
+              onPressed: widget.onCancel,
+              style: TextButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

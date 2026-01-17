@@ -18,7 +18,7 @@ class AboutPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text("Openlib"),
+        title: const Text("Openlib_reborn"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
       ),
       body: const SingleChildScrollView(

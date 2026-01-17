@@ -21,7 +21,7 @@
     </queries>
     
     <application
-        android:label="Openlib"
+        android:label="Openlib_reborn"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
         android:networkSecurityConfig="@xml/network_security_config"
